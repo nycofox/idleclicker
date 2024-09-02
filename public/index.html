@@ -11,11 +11,11 @@
 </head>
 <body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
 
-<div x-data="{ beerCount: 0, beersPerClick: 1, upgradeCost: 10, totalBeersBrewed: 0 }" class="text-center">
+<div x-data="brewery()" x-init="loadProgress(false); startAutoSave();" class="text-center">
     <h1 class="text-4xl font-bold mb-8">Beer Brewing Clicker</h1>
 
     <!-- Brew Beer Button -->
-    <button @click="beerCount += beersPerClick; totalBeersBrewed += beersPerClick;" class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-4 px-8 rounded-lg text-2xl">
+    <button @click="brewBeer()" class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-4 px-8 rounded-lg text-2xl">
         Brew Beer
     </button>
 
@@ -31,7 +31,7 @@
 
     <!-- Upgrade Button -->
     <div class="mt-8">
-        <button @click="if(beerCount >= upgradeCost) { beerCount -= upgradeCost; beersPerClick++; upgradeCost *= 2; }"
+        <button @click="upgradeClick()"
                 :disabled="beerCount < upgradeCost"
                 class="bg-green-500 hover:bg-green-600 text-black font-bold py-4 px-8 rounded-lg text-xl mt-4 disabled:opacity-50">
             Upgrade (+1 beer per click, Cost: <span x-text="upgradeCost"></span> beers)
@@ -42,7 +42,74 @@
     <div class="mt-4 text-xl">
         Beers per Click: <span x-text="beersPerClick"></span>
     </div>
+
+    <!-- Save and Load Buttons -->
+    <div class="mt-8">
+        <button @click="saveProgress()" class="bg-blue-500 hover:bg-blue-600 text-black font-bold py-4 px-8 rounded-lg text-xl">
+            Save Progress
+        </button>
+        <button @click="loadProgress(true)" class="bg-purple-500 hover:bg-purple-600 text-black font-bold py-4 px-8 rounded-lg text-xl ml-4">
+            Load Progress
+        </button>
+    </div>
 </div>
+
+<script>
+    function brewery() {
+        return {
+            beerCount: 0,
+            beersPerClick: 1,
+            upgradeCost: 10,
+            totalBeersBrewed: 0,
+
+            brewBeer() {
+                this.beerCount += this.beersPerClick;
+                this.totalBeersBrewed += this.beersPerClick;
+            },
+
+            upgradeClick() {
+                if (this.beerCount >= this.upgradeCost) {
+                    this.beerCount -= this.upgradeCost;
+                    this.beersPerClick++;
+                    this.upgradeCost *= 2;
+                }
+            },
+
+            saveProgress() {
+                const gameState = {
+                    beerCount: this.beerCount,
+                    beersPerClick: this.beersPerClick,
+                    upgradeCost: this.upgradeCost,
+                    totalBeersBrewed: this.totalBeersBrewed,
+                };
+                localStorage.setItem('brewerySave', JSON.stringify(gameState));
+            },
+
+            loadProgress(showAlert) {
+                const savedState = localStorage.getItem('brewerySave');
+                if (savedState) {
+                    const gameState = JSON.parse(savedState);
+                    this.beerCount = gameState.beerCount;
+                    this.beersPerClick = gameState.beersPerClick;
+                    this.upgradeCost = gameState.upgradeCost;
+                    this.totalBeersBrewed = gameState.totalBeersBrewed;
+                    if (showAlert) {
+                        alert('Progress Loaded!');
+                    }
+                } else if (showAlert) {
+                    alert('No saved progress found.');
+                }
+            },
+
+            startAutoSave() {
+                setInterval(() => {
+                    this.saveProgress();
+                }, 10000); // Auto-save every 10 seconds
+            },
+        }
+    }
+
+</script>
 
 </body>
 </html>
